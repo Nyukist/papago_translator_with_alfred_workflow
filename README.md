@@ -1,0 +1,1 @@
+# papago_translator_with_alfred_workflow
