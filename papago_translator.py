@@ -2,6 +2,8 @@ import json
 import sys
 import urllib.parse
 import urllib.request
+from http.client import HTTPResponse
+from typing import Optional
 
 
 class PapagoTranslate:
@@ -16,8 +18,8 @@ class PapagoTranslate:
         }]}
         self.available_language_codes: dict = self._get_available_language_codes()
 
-    def run(self, query) -> None:
-        output_json, input_language = self._get_translated_data(str(query))
+    def run(self, query: str) -> None:
+        output_json, input_language = self._get_translated_data(query)
         translated_text: str = output_json['message']['result']['translatedText']
 
         self._update_show_message(
@@ -31,7 +33,7 @@ class PapagoTranslate:
         # 네이버 개발자 센터에서 발급받은 client id, secret 이 있는 파일을 찾아 id, secret 반환
         try:
             with open('client_key.json', 'r') as f:
-                data = json.load(f)
+                data: dict = json.load(f)
 
         except:
             error_text = 'client_key.json 을 찾을 수 없습니다'
@@ -54,7 +56,7 @@ class PapagoTranslate:
         # 언어코드 파일을 찾아 dict 반환
         try:
             with open('available_language_codes.json') as f:
-                datas = json.load(f)
+                datas: dict = json.load(f)
         except:
             error_text = 'available_language_codes.json 을 찾을 수 없습니다'
             self._update_show_message(text=error_text)
@@ -62,7 +64,12 @@ class PapagoTranslate:
 
         return datas
 
-    def _update_show_message(self, text, is_result=False, input_language=None) -> None:
+    def _update_show_message(
+            self,
+            text: str,
+            is_result: Optional[bool] = False,
+            input_language: Optional[str] = None,
+    ) -> None:
         # 검색 창에 보여줄 내용을 수정
         self.result['items'][0]['arg'] = text
 
@@ -87,14 +94,14 @@ class PapagoTranslate:
         url = self.host + 'detectLangs'
         request: urllib.request.Request = self._update_request(url)
 
-        encoded_query = urllib.parse.quote(query.encode('utf-8'))
+        encoded_query: str = urllib.parse.quote(query.encode('utf-8'))
         data = "query=" + encoded_query
 
         dt: str = self._request(request=request, data=data)
         lang_code: dict = json.loads(dt)
         return lang_code['langCode']
 
-    def _get_translated_data(self, query) -> tuple[dict, str]:
+    def _get_translated_data(self, query: str) -> tuple[dict, str]:
         # 번역 결과와 검색한 언어 반환
         text: str = urllib.parse.quote(query.encode('utf-8'))
 
@@ -125,29 +132,34 @@ class PapagoTranslate:
 
     def _show_message(self):
         # 검색 창에 표시
-        print(json.dumps(self.result))
+        result: str = json.dumps(self.result)
+        print(result)
         sys.stdout.flush()
 
         # 검색 창에 표시될 때 스크립트 종료
         exit()
 
-    def _request(self, request, data) -> str:
-        encoded_data = data.encode('utf-8')
-        response = urllib.request.urlopen(request, data=encoded_data)
+    def _request(
+            self,
+            request: urllib.request.Request,
+            data: str
+    ) -> str:
+        encoded_data: bytes = data.encode('utf-8')
+        response: HTTPResponse = urllib.request.urlopen(request, data=encoded_data)
         status_code: int = response.status
 
         if status_code == 200:
-            response_body = response.read()
-            dt = response_body.decode('utf-8')
+            response_body: bytes = response.read()
+            dt: str = response_body.decode('utf-8')
         else:
-            dt = "error code:" + str(status_code)
+            dt: str = "error code:" + str(status_code)
         return dt
 
 
-service = PapagoTranslate()
+service: PapagoTranslate = PapagoTranslate()
 
 # input text
-input_text = sys.argv[1]
+input_text: str = sys.argv[1]
 
 # run translator
 service.run(query=input_text)
