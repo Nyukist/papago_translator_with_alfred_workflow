@@ -130,7 +130,7 @@ class PapagoTranslate:
 
         return json.loads(dt), lang_code_value
 
-    def _show_message(self):
+    def _show_message(self) -> None:
         # 검색 창에 표시
         result: str = json.dumps(self.result)
         print(result)
